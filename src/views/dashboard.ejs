@@ -1,0 +1,75 @@
+<% const tarjetas = [
+  { t: 'Usuarios', n: resumen.usuarios, i: 'bi-people', s: 'usuarios' },
+  { t: 'Cultivos', n: resumen.cultivos, i: 'bi-flower1', s: 'cultivos' },
+  { t: 'Insumos', n: resumen.insumos, i: 'bi-droplet-half', s: 'insumos' },
+  { t: 'Parcelas', n: resumen.parcelas, i: 'bi-map', s: 'parcelas' },
+  { t: 'Lotes', n: resumen.lotes, i: 'bi-grid-3x3-gap', s: 'lotes' },
+  { t: 'Labores', n: resumen.labores, i: 'bi-journal-check', s: 'labores' },
+]; %>
+<div class="encabezado">
+  <div>
+    <h1 class="h3 mb-1">Hola, <%= user.nombre.split(' ')[0] %> 👋</h1>
+    <p class="text-muted mb-0">Aquí administras los datos que alimentan el core de BitácoraAgro: usuarios, catálogos, parcelas, lotes y labores.</p>
+  </div>
+  <a class="btn btn-outline-success" href="/admin/estadisticas"><i class="bi bi-bar-chart-line me-1"></i> Ver estadísticas</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <% tarjetas.forEach(function (c) { %>
+    <div class="col-6 col-md-4 col-xl-2">
+      <a href="/admin/<%= c.s %>" class="card stat-card text-decoration-none h-100">
+        <div class="card-body">
+          <i class="bi <%= c.i %> stat-icono"></i>
+          <div class="stat-numero"><%= c.n %></div>
+          <div class="stat-titulo"><%= c.t %></div>
+        </div>
+      </a>
+    </div>
+  <% }) %>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+        <span>Últimos lotes</span>
+        <span class="small text-muted"><%= lotesActivos %> activos · <%= lotesCosechados %> cosechados</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead><tr><th>Lote</th><th>Cultivo</th><th>Productor</th><th>Estado</th></tr></thead>
+          <tbody>
+            <% recientes.forEach(function (l) { %>
+              <tr>
+                <td class="fw-semibold"><%= l.codigo %></td>
+                <td><%= l.cultivo %></td>
+                <td class="text-muted"><%= l.productor %></td>
+                <td><span class="badge text-bg-<%= l.estado === 'ACTIVO' ? 'success' : 'secondary' %>"><%= l.estado === 'ACTIVO' ? 'Activo' : 'Cosechado' %></span></td>
+              </tr>
+            <% }) %>
+            <% if (!recientes.length) { %><tr><td colspan="4" class="text-center text-muted py-4">Todavía no hay lotes.</td></tr><% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card mb-3">
+      <div class="card-header bg-white fw-semibold">Usuarios por rol</div>
+      <ul class="list-group list-group-flush">
+        <% porRol.forEach(function (r) { %>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <%= r.rol.charAt(0) + r.rol.slice(1).toLowerCase() %>
+            <span class="badge rounded-pill text-bg-light border"><%= r.n %></span>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+    <div class="card nota-card">
+      <div class="card-body">
+        <h2 class="h6"><i class="bi bi-shield-check me-1"></i> Validación en el servidor</h2>
+        <p class="small mb-0">Los días de carencia, las fechas de las labores y las credenciales se validan en el back-end antes de guardarse. Cada dropdown se comprueba contra la base de datos: el navegador solo ayuda, el servidor decide.</p>
+      </div>
+    </div>
+  </div>
+</div>

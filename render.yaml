@@ -1,0 +1,20 @@
+# Despliegue en Render (Blueprint). Render lee este archivo desde GitHub.
+services:
+  - type: web
+    name: bitacora-agro-admin
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /login
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true      # Render crea un valor aleatorio seguro
+      - key: ADMIN_EMAIL
+        value: admin@bitacoraagro.com
+      - key: ADMIN_PASSWORD
+        sync: false              # Render te lo pregunta al crear el servicio

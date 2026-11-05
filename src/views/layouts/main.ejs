@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= titulo ? titulo + ' · ' : '' %>BitácoraAgro Admin</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232E7D4F'/%3E%3Cpath d='M16 25V13M16 13c0-4 3-7 8-7 0 5-3 8-8 7zM16 18c0-3-2-5-6-5 0 4 2 6 6 5z' stroke='white' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/vendor/icons/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="<%= user ? 'con-menu' : 'sin-menu' %>">
+<% if (!user) { %>
+  <main class="login-pagina"><%- body %></main>
+<% } else { %>
+
+  <!-- Barra superior (solo en móvil/tablet) -->
+  <header class="topbar d-lg-none">
+    <button class="btn btn-light btn-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral" aria-label="Abrir menú">
+      <i class="bi bi-list fs-5"></i>
+    </button>
+    <span class="fw-semibold"><i class="bi bi-flower1 me-1"></i> BitácoraAgro</span>
+    <span class="topbar-espacio"></span>
+  </header>
+
+  <!-- Menú lateral: fijo en pantallas grandes, deslizable en móvil -->
+  <nav class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="menuLateral" aria-label="Menú principal">
+    <div class="offcanvas-header d-lg-none">
+      <span class="text-white fw-semibold">Menú</span>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#menuLateral" aria-label="Cerrar"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column p-0">
+      <a href="/admin" class="marca">
+        <span class="marca-icono"><i class="bi bi-flower1"></i></span>
+        <span><strong>BitácoraAgro</strong><small>Administración</small></span>
+      </a>
+
+      <ul class="nav flex-column menu">
+        <li><a class="nav-link <%= ruta === '/admin' ? 'active' : '' %>" href="/admin"><i class="bi bi-speedometer2"></i> Panel</a></li>
+        <% menu.forEach(function (g) { %>
+          <li class="menu-grupo"><%= g.titulo %></li>
+          <% g.items.forEach(function (it) { %>
+            <li><a class="nav-link <%= ruta.indexOf('/admin/' + it.slug) === 0 ? 'active' : '' %>" href="/admin/<%= it.slug %>"><i class="bi <%= it.icono %>"></i> <%= it.titulo %></a></li>
+          <% }) %>
+        <% }) %>
+      </ul>
+
+      <div class="usuario-caja mt-auto">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="avatar"><%= user.nombre.charAt(0).toUpperCase() %></span>
+          <div class="lh-sm overflow-hidden">
+            <div class="text-white text-truncate fw-semibold"><%= user.nombre %></div>
+            <small class="text-white-50 text-truncate d-block"><%= user.correo %></small>
+          </div>
+        </div>
+        <form method="post" action="/logout">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button class="btn btn-outline-light btn-sm w-100" type="submit"><i class="bi bi-box-arrow-right me-1"></i> Cerrar sesión</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+
+  <main class="contenido">
+    <div class="contenido-interno">
+      <% if (flash) { %>
+        <div class="alert alert-<%= flash.tipo %> alert-dismissible fade show d-flex align-items-start gap-2" role="alert">
+          <i class="bi <%= flash.tipo === 'success' ? 'bi-check-circle-fill' : (flash.tipo === 'danger' ? 'bi-exclamation-octagon-fill' : 'bi-exclamation-triangle-fill') %>"></i>
+          <div class="flex-grow-1"><%= flash.msg %></div>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+      <% } %>
+      <%- body %>
+    </div>
+  </main>
+<% } %>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>

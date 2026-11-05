@@ -1,0 +1,77 @@
+<% const maxKg = stats.cultivos.length ? stats.cultivos[0].kg : 1;
+   const fmt = function (n) { return Number(n).toLocaleString('es-EC', { maximumFractionDigits: 2 }); }; %>
+<div class="encabezado">
+  <div>
+    <h1 class="h3 mb-1"><i class="bi bi-bar-chart-line me-2 text-success"></i>Estadísticas y reportes</h1>
+    <p class="text-muted mb-0">Producción de los lotes cosechados dentro del rango de fechas.</p>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="get" action="/admin/estadisticas" class="row g-2 align-items-end">
+      <div class="col-6 col-md-3">
+        <label class="form-label small mb-1" for="desde">Desde</label>
+        <input type="date" class="form-control<%= errores.desde ? ' is-invalid' : '' %>" id="desde" name="desde" value="<%= desde %>">
+        <% if (errores.desde) { %><div class="invalid-feedback"><%= errores.desde %></div><% } %>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label small mb-1" for="hasta">Hasta</label>
+        <input type="date" class="form-control<%= errores.hasta ? ' is-invalid' : '' %>" id="hasta" name="hasta" value="<%= hasta %>">
+        <% if (errores.hasta) { %><div class="invalid-feedback"><%= errores.hasta %></div><% } %>
+      </div>
+      <div class="col-12 col-md-auto"><button class="btn btn-primary w-100" type="submit"><i class="bi bi-funnel me-1"></i> Filtrar</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12 col-md-4"><div class="card h-100"><div class="card-body">
+    <div class="stat-titulo">Lotes cosechados</div><div class="stat-numero"><%= stats.totalLotes %></div></div></div></div>
+  <div class="col-12 col-md-4"><div class="card h-100"><div class="card-body">
+    <div class="stat-titulo">Kilogramos totales</div><div class="stat-numero"><%= fmt(stats.kgTotal) %> <small class="fs-6 text-muted">kg</small></div></div></div></div>
+  <div class="col-12 col-md-4"><div class="card h-100"><div class="card-body">
+    <div class="stat-titulo">Calificación promedio</div>
+    <div class="stat-numero"><%= stats.promedioGlobal === null ? 'No disponible' : stats.promedioGlobal.toFixed(2) + ' ★' %></div>
+    <div class="small text-muted"><%= stats.totalCalificaciones %> calificaciones</div></div></div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header bg-white fw-semibold">Producción por cultivo</div>
+      <div class="card-body">
+        <% if (!stats.cultivos.length) { %><p class="text-muted mb-0">No hay cosechas en este rango.</p><% } %>
+        <% stats.cultivos.forEach(function (c) { %>
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small"><span class="fw-semibold"><%= c.cultivo %></span><span><%= fmt(c.kg) %> kg · <%= c.lotes %> lote<%= c.lotes === 1 ? '' : 's' %></span></div>
+            <div class="barra"><span style="width: <%= Math.max(4, Math.round(c.kg / maxKg * 100)) %>%"></span></div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header bg-white fw-semibold">Ranking de productores</div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead><tr><th>#</th><th>Productor</th><th>Lotes</th><th>Kg</th><th>Labores</th><th>Calificación</th></tr></thead>
+          <tbody>
+            <% stats.ranking.forEach(function (r, i) { %>
+              <tr>
+                <td data-label="Puesto"><%= i + 1 %></td>
+                <td data-label="Productor" class="fw-semibold"><%= r.productor %></td>
+                <td data-label="Lotes"><%= r.lotes %></td>
+                <td data-label="Kg"><%= fmt(r.kg) %></td>
+                <td data-label="Labores"><%= r.labores %></td>
+                <td data-label="Calificación"><%= r.promedio === null ? 'No disponible' : r.promedio.toFixed(2) + ' ★' %></td>
+              </tr>
+            <% }) %>
+            <% if (!stats.ranking.length) { %><tr><td colspan="6" class="text-center text-muted py-4">No hay cosechas en este rango.</td></tr><% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
