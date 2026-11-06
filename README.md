@@ -18,8 +18,8 @@ El administrador gestiona los datos que alimentan al core, con las mismas entida
 |---|---|
 | ![Login](docs/login.png) | ![Panel](docs/panel.png) |
 
-🔗 **Sitio desplegado:** _(pega aquí la URL de Render)_
-🎥 **Video explicativo:** _(pega aquí el enlace de Loom/YouTube)_
+🔗 **Sitio desplegado:** _(https://bitacora-agro-admin.onrender.com)_
+🎥 **Video explicativo:** _(https://youtu.be/xKhuk9ME0ZA)_
 
 ---
 
