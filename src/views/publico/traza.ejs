@@ -1,0 +1,140 @@
+<%
+  const l = t.lote, c = t.certificado, rep = t.productor.reputacion;
+  const rolActual = user ? user.rol : null;
+%>
+<section class="traza-hero">
+  <div class="contenedor">
+    <div class="etiqueta"><i class="bi bi-patch-check me-1"></i> Certificado de trazabilidad</div>
+    <h1 class="display-6 mb-1"><%= l.cultivo %></h1>
+    <div class="etiqueta">Lote <%= l.codigo %> · Parcela <%= l.parcela %></div>
+  </div>
+</section>
+
+<div class="contenedor pb-5">
+  <!-- Verificación de integridad: se recalcula el hash en este momento -->
+  <div class="card sello shadow-sm mb-4 <%= t.verificado ? 'sello-ok' : 'sello-mal' %>">
+    <div class="card-body d-flex gap-3 align-items-start">
+      <span class="sello-icono"><i class="bi <%= t.verificado ? 'bi-patch-check-fill' : 'bi-exclamation-octagon-fill' %>"></i></span>
+      <div class="flex-grow-1">
+        <% if (t.verificado) { %>
+          <h2 class="h5 mb-1">Verificado</h2>
+          <p class="mb-2 text-muted">El historial de este lote coincide con el certificado emitido el <%= h.fecha(c.fecha_emision) %>. Nadie lo modificó después.</p>
+        <% } else { %>
+          <h2 class="h5 mb-1 text-danger">¡Alerta: el historial fue modificado!</h2>
+          <p class="mb-2">Los datos de este lote <strong>ya no coinciden</strong> con el certificado emitido el <%= h.fecha(c.fecha_emision) %>. No confíes en esta información.</p>
+        <% } %>
+        <span class="codigo-pill"><%= c.codigo_publico %></span>
+        <details class="mt-2 small text-muted">
+          <summary>Ver huella digital (SHA-256)</summary>
+          <code class="d-block mt-1 text-break"><%= c.hash %></code>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3"><div class="dato"><small>Cultivo</small><strong><%= l.cultivo %></strong></div></div>
+    <div class="col-6 col-md-3"><div class="dato"><small>Cantidad cosechada</small><strong><%= h.numero(t.cosecha.cantidad_kg) %> kg</strong></div></div>
+    <div class="col-6 col-md-3"><div class="dato"><small>Calidad</small><strong><%= t.cosecha.calidad %></strong></div></div>
+    <div class="col-6 col-md-3"><div class="dato"><small>Cosecha</small><strong><%= h.fecha(t.cosecha.fecha) %></strong></div></div>
+    <div class="col-6 col-md-3"><div class="dato"><small>Siembra</small><strong><%= h.fecha(l.fecha_siembra) %></strong></div></div>
+    <div class="col-6 col-md-3"><div class="dato"><small>Parcela</small><strong><%= l.parcela %></strong></div></div>
+    <div class="col-12 col-md-6"><div class="dato"><small>Ubicación</small><strong><%= l.ubicacion %></strong></div></div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card h-100"><div class="card-body">
+        <h2 class="h5 mb-3">Historial del cultivo</h2>
+        <ol class="timeline">
+          <li><span class="punto hito"></span><div class="titulo">Siembra</div><div class="detalle"><%= h.fecha(l.fecha_siembra) %> · <%= l.cultivo %></div></li>
+          <% t.labores.forEach(function (la) { %>
+            <li>
+              <span class="punto <%= la.es_agroquimico ? 'agro' : '' %>"></span>
+              <div class="titulo"><i class="bi <%= h.iconoLabor(la.tipo) %> me-1"></i><%= h.tipoLabor(la.tipo) %>
+                <% if (la.es_agroquimico) { %><span class="chip-agro">Agroquímico · carencia <%= h.diasTxt(la.dias_carencia) %></span><% } %>
+              </div>
+              <div class="detalle">
+                <%= h.fecha(la.fecha) %>
+                <% if (la.insumo) { %> · <%= la.insumo %><% } %>
+                <% if (la.cantidad !== null) { %> · <%= h.numero(la.cantidad) %><% } %>
+                <% if (la.descripcion) { %><br><%= la.descripcion %><% } %>
+              </div>
+            </li>
+          <% }) %>
+          <li><span class="punto hito"></span><div class="titulo">Cosecha</div><div class="detalle"><%= h.fecha(t.cosecha.fecha) %> · <%= h.numero(t.cosecha.cantidad_kg) %> kg · Calidad <%= t.cosecha.calidad %></div></li>
+        </ol>
+      </div></div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card mb-4"><div class="card-body">
+        <h2 class="h5 mb-3">Productor</h2>
+        <div class="d-flex align-items-center gap-3">
+          <span class="avatar avatar-sm" style="width:46px;height:46px;background:var(--verde)"><%= t.productor.nombre.charAt(0) %></span>
+          <div>
+            <div class="fw-semibold"><%= t.productor.nombre %></div>
+            <% if (rep.promedio === null) { %>
+              <div class="text-muted small">Reputación: No disponible</div>
+            <% } else { %>
+              <div><%- h.estrellas(rep.promedio) %> <strong><%= rep.promedio.toFixed(1) %></strong> <span class="text-muted small">(<%= rep.total %> calificacion<%= rep.total === 1 ? '' : 'es' %>)</span></div>
+            <% } %>
+          </div>
+        </div>
+      </div></div>
+
+      <div class="card"><div class="card-body">
+        <h2 class="h5 mb-3">Califica este lote</h2>
+        <% if (rolActual === 'COMPRADOR') { %>
+          <% if (miCalificacion) { %>
+            <div class="alert alert-success mb-0">
+              <div class="fw-semibold mb-1">Ya calificaste este lote</div>
+              <%- h.estrellas(miCalificacion.puntaje) %>
+              <% if (miCalificacion.comentario) { %><div class="small mt-1">«<%= miCalificacion.comentario %>»</div><% } %>
+            </div>
+          <% } else if (!t.verificado) { %>
+            <div class="alert alert-danger mb-0">No se puede calificar un certificado que no pasó la verificación.</div>
+          <% } else { %>
+            <form method="post" action="/t/<%= c.codigo_publico %>/calificar">
+              <input type="hidden" name="_csrf" value="<%= csrf %>">
+              <fieldset class="mb-3">
+                <legend class="form-label fs-6">Tu puntaje</legend>
+                <div class="selector-estrellas">
+                  <% for (let i = 5; i >= 1; i--) { %>
+                    <input type="radio" name="puntaje" id="p<%= i %>" value="<%= i %>" required>
+                    <label for="p<%= i %>" title="<%= i %> estrella<%= i === 1 ? '' : 's' %>">★</label>
+                  <% } %>
+                </div>
+              </fieldset>
+              <div class="mb-3">
+                <label class="form-label" for="comentario">Comentario <span class="text-muted">(opcional)</span></label>
+                <textarea class="form-control" id="comentario" name="comentario" rows="3" maxlength="300" placeholder="¿Cómo fue la calidad del producto?"></textarea>
+              </div>
+              <button class="btn btn-primary w-100" type="submit"><i class="bi bi-star me-1"></i> Enviar calificación</button>
+              <div class="form-text mt-2">Solo puedes calificar una vez cada lote y no podrás editarla después.</div>
+            </form>
+          <% } %>
+        <% } else if (rolActual) { %>
+          <p class="text-muted mb-0">Solo las cuentas de <strong>comprador</strong> pueden calificar lotes.</p>
+        <% } else { %>
+          <p class="text-muted">¿Compraste este producto? Ingresa como comprador para calificar al productor.</p>
+          <div class="d-flex gap-2">
+            <a class="btn btn-primary flex-fill" href="/login">Iniciar sesión</a>
+            <a class="btn btn-outline-success flex-fill" href="/registro?rol=COMPRADOR">Registrarme</a>
+          </div>
+        <% } %>
+
+        <% if (comentarios.length) { %>
+          <hr>
+          <h3 class="h6">Opiniones de este lote (<%= t.calificaciones %>)</h3>
+          <% comentarios.forEach(function (k) { %>
+            <div class="mb-2">
+              <%- h.estrellas(k.puntaje) %> <span class="text-muted small"><%= h.fecha(k.fecha) %></span>
+              <% if (k.comentario) { %><div class="small">«<%= k.comentario %>»</div><% } %>
+            </div>
+          <% }) %>
+        <% } %>
+      </div></div>
+    </div>
+  </div>
+</div>

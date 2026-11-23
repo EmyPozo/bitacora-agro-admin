@@ -1,0 +1,40 @@
+<section class="hero">
+  <div class="contenedor">
+    <h1 class="display-6 mb-3">Sabe de dónde viene lo que comes</h1>
+    <p class="lead mb-4">Cada lote de BitácoraAgro tiene un certificado con todo su historial: siembra, riegos, fumigaciones y cosecha. Ingresa el código o escanea el QR del producto.</p>
+    <form class="buscar-codigo" method="get" action="/consultar" role="search">
+      <label class="visually-hidden" for="codigo">Código del certificado</label>
+      <div class="input-group input-group-lg">
+        <input type="text" class="form-control<%= error ? ' is-invalid' : '' %>" id="codigo" name="codigo" value="<%= codigo %>" placeholder="BA-XXXX-XXXX" maxlength="20" autocomplete="off" required>
+        <button class="btn btn-light fw-semibold" type="submit"><i class="bi bi-search me-1"></i> Consultar</button>
+      </div>
+      <% if (error) { %><div class="text-white bg-danger bg-opacity-75 rounded mt-2 px-3 py-2 small"><i class="bi bi-exclamation-triangle me-1"></i><%= error %></div><% } %>
+    </form>
+  </div>
+</section>
+
+<section class="contenedor pasos pb-5">
+  <div class="row g-3">
+    <div class="col-md-4"><div class="card paso"><div class="card-body">
+      <span class="stat-icono"><i class="bi bi-journal-check"></i></span>
+      <h2 class="h6">El productor registra todo</h2>
+      <p class="text-muted small mb-0">Labores con fecha, insumos usados y días de carencia de los agroquímicos.</p>
+    </div></div></div>
+    <div class="col-md-4"><div class="card paso"><div class="card-body">
+      <span class="stat-icono"><i class="bi bi-shield-check"></i></span>
+      <h2 class="h6">Certificado a prueba de cambios</h2>
+      <p class="text-muted small mb-0">El historial se firma con un código SHA-256. Si alguien lo altera, la verificación falla.</p>
+    </div></div></div>
+    <div class="col-md-4"><div class="card paso"><div class="card-body">
+      <span class="stat-icono"><i class="bi bi-star"></i></span>
+      <h2 class="h6">Compradores que califican</h2>
+      <p class="text-muted small mb-0">Quien compra puede calificar al productor y construir su reputación.</p>
+    </div></div></div>
+  </div>
+  <% if (!user) { %>
+    <div class="text-center mt-4">
+      <span class="text-muted">¿Eres productor o comprador?</span>
+      <a href="/registro" class="fw-semibold ms-1">Crea tu cuenta</a> o <a href="/login" class="fw-semibold">inicia sesión</a>
+    </div>
+  <% } %>
+</section>

@@ -3,7 +3,7 @@
 // Se calculan sobre los lotes COSECHADOS dentro del rango (fecha de cosecha).
 const { esFechaValida, hoyISO, sumarDias } = require('../lib/validators');
 
-function calcularEstadisticas(db, desde, hasta) {
+function calcularEstadisticas(db, desde, hasta, productorId = null) {
   const filas = db.prepare(`
     SELECT l.id, u.id AS productor_id, u.nombre AS productor, cu.nombre AS cultivo, co.cantidad_kg AS kg,
            (SELECT COUNT(*) FROM labores WHERE lote_id = l.id) AS labores,
@@ -14,7 +14,7 @@ function calcularEstadisticas(db, desde, hasta) {
     JOIN parcelas p ON p.id = l.parcela_id
     JOIN usuarios u ON u.id = p.usuario_id
     JOIN cultivos cu ON cu.id = l.cultivo_id
-    WHERE co.fecha >= ? AND co.fecha <= ?`).all(desde, hasta);
+    WHERE co.fecha >= ? AND co.fecha <= ? AND (? IS NULL OR u.id = ?)`).all(desde, hasta, productorId, productorId);
 
   const redondear = (n) => Math.round(n * 100) / 100;
   const promedio = (suma, n) => (n > 0 ? redondear(suma / n) : null);
@@ -54,21 +54,25 @@ function registrarEstadisticas(app) {
   const db = app.db;
 
   app.get('/admin/estadisticas', (req, reply) => {
-    const hoy = hoyISO();
-    let desde = String(req.query.desde || '').trim();
-    let hasta = String(req.query.hasta || '').trim();
-    const errores = {};
-
-    if (!desde) desde = sumarDias(hoy, -365);
-    else if (!esFechaValida(desde)) { errores.desde = 'Fecha inválida.'; desde = sumarDias(hoy, -365); }
-    if (!hasta) hasta = hoy;
-    else if (!esFechaValida(hasta)) { errores.hasta = 'Fecha inválida.'; hasta = hoy; }
-    if (desde > hasta) { errores.hasta = 'La fecha final no puede ser anterior a la inicial.'; hasta = desde; }
-
+    const { desde, hasta, errores } = leerRango(req.query);
     const stats = calcularEstadisticas(db, desde, hasta);
     const status = Object.keys(errores).length ? 422 : 200;
     return reply.page('estadisticas', { titulo: 'Estadísticas y reportes', desde, hasta, errores, stats }, status);
   });
 }
 
-module.exports = { registrarEstadisticas, calcularEstadisticas };
+/** Valida el rango de fechas recibido por GET; devuelve { desde, hasta, errores }. */
+function leerRango(query) {
+  const hoy = hoyISO();
+  let desde = String(query.desde || '').trim();
+  let hasta = String(query.hasta || '').trim();
+  const errores = {};
+  if (!desde) desde = sumarDias(hoy, -365);
+  else if (!esFechaValida(desde)) { errores.desde = 'Fecha inválida.'; desde = sumarDias(hoy, -365); }
+  if (!hasta) hasta = hoy;
+  else if (!esFechaValida(hasta)) { errores.hasta = 'Fecha inválida.'; hasta = hoy; }
+  if (desde > hasta) { errores.hasta = 'La fecha final no puede ser anterior a la inicial.'; hasta = desde; }
+  return { desde, hasta, errores };
+}
+
+module.exports = { registrarEstadisticas, calcularEstadisticas, leerRango };

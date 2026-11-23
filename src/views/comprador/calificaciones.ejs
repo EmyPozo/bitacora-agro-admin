@@ -1,0 +1,28 @@
+<div class="encabezado">
+  <div>
+    <h1 class="h3 mb-1"><i class="bi bi-star me-2 text-success"></i>Mis calificaciones</h1>
+    <p class="text-muted mb-0">Los lotes que has calificado. Cada lote se califica una sola vez.</p>
+  </div>
+</div>
+<div class="card">
+  <% if (!lista.length) { %>
+    <div class="vacio"><i class="bi bi-star"></i><p class="mb-0">Todavía no has calificado ningún lote.<br>Escanea el QR de un producto para empezar.</p></div>
+  <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead><tr><th>Lote</th><th>Productor</th><th>Puntaje</th><th>Comentario</th><th>Fecha</th></tr></thead>
+        <tbody>
+          <% lista.forEach(function (c) { %>
+            <tr>
+              <td><a class="fw-semibold text-decoration-none" href="/t/<%= c.certificado %>"><%= c.cultivo %> · <%= c.lote %></a></td>
+              <td><%= c.productor %></td>
+              <td><%- h.estrellas(c.puntaje) %></td>
+              <td><%= c.comentario || '—' %></td>
+              <td><%= h.fecha(c.fecha) %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>

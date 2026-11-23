@@ -1,0 +1,48 @@
+<div class="encabezado">
+  <div>
+    <h1 class="h3 mb-1"><i class="bi bi-star me-2 text-success"></i>Calificaciones recibidas</h1>
+    <p class="text-muted mb-0">Lo que opinan los compradores de tus lotes. No se pueden editar ni borrar.</p>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card h-100"><div class="card-body text-center">
+      <div class="stat-titulo">Tu reputación</div>
+      <% if (reputacion.promedio === null) { %>
+        <div class="stat-numero">No disponible</div>
+        <p class="text-muted small mb-0">Aún no tienes calificaciones.</p>
+      <% } else { %>
+        <div class="stat-numero"><%= reputacion.promedio.toFixed(1) %></div>
+        <div class="fs-4"><%- h.estrellas(reputacion.promedio) %></div>
+        <p class="text-muted small mb-3"><%= reputacion.total %> calificacion<%= reputacion.total === 1 ? '' : 'es' %></p>
+        <% distribucion.forEach(function (d) { %>
+          <div class="d-flex align-items-center gap-2 small mb-1">
+            <span style="width:1.5rem"><%= d.puntaje %>★</span>
+            <div class="barra flex-grow-1 mt-0"><span style="width: <%= Math.round(d.n / reputacion.total * 100) %>%"></span></div>
+            <span style="width:1.5rem" class="text-end"><%= d.n %></span>
+          </div>
+        <% }) %>
+      <% } %>
+    </div></div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <% if (!lista.length) { %>
+        <div class="vacio"><i class="bi bi-star"></i><p class="mb-0">Todavía no hay calificaciones.<br>Comparte el QR de tus lotes certificados para que los compradores te califiquen.</p></div>
+      <% } else { %>
+        <ul class="list-group list-group-flush">
+          <% lista.forEach(function (c) { %>
+            <li class="list-group-item">
+              <div class="d-flex justify-content-between flex-wrap gap-1">
+                <span><%- h.estrellas(c.puntaje) %></span>
+                <span class="small text-muted"><%= c.codigo %> · <%= c.cultivo %> · <%= h.fecha(c.fecha) %></span>
+              </div>
+              <% if (c.comentario) { %><div class="mt-1">«<%= c.comentario %>»</div><% } %>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </div>
+  </div>
+</div>

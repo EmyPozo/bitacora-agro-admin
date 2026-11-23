@@ -1,0 +1,50 @@
+<div class="encabezado">
+  <div>
+    <h1 class="h3 mb-1"><i class="bi bi-pie-chart me-2 text-success"></i>Mi reporte</h1>
+    <p class="text-muted mb-0">Tu producción por rango de fechas (según la fecha de cosecha).</p>
+  </div>
+  <button class="btn btn-outline-secondary no-imprimir" type="button" data-imprimir><i class="bi bi-printer me-1"></i> Imprimir</button>
+</div>
+
+<div class="card mb-4 no-imprimir"><div class="card-body">
+  <form method="get" action="/productor/reporte" class="row g-2 align-items-end">
+    <div class="col-6 col-md-3">
+      <label class="form-label small mb-1" for="desde">Desde</label>
+      <input type="date" class="form-control<%= errores.desde ? ' is-invalid' : '' %>" id="desde" name="desde" value="<%= desde %>">
+      <% if (errores.desde) { %><div class="invalid-feedback"><%= errores.desde %></div><% } %>
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label small mb-1" for="hasta">Hasta</label>
+      <input type="date" class="form-control<%= errores.hasta ? ' is-invalid' : '' %>" id="hasta" name="hasta" value="<%= hasta %>">
+      <% if (errores.hasta) { %><div class="invalid-feedback"><%= errores.hasta %></div><% } %>
+    </div>
+    <div class="col-12 col-md-auto"><button class="btn btn-primary w-100" type="submit"><i class="bi bi-funnel me-1"></i> Filtrar</button></div>
+  </form>
+</div></div>
+
+<p class="text-muted small">Del <%= h.fecha(desde) %> al <%= h.fecha(hasta) %></p>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="stat-titulo">Lotes cosechados</div><div class="stat-numero"><%= stats.totalLotes %></div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="stat-titulo">Kilogramos</div><div class="stat-numero"><%= h.numero(stats.kgTotal) %></div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="stat-titulo">Labores registradas</div><div class="stat-numero"><%= labores %></div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="stat-titulo">Calificación promedio</div>
+    <div class="stat-numero"><%= stats.promedioGlobal === null ? 'No disponible' : stats.promedioGlobal.toFixed(1) + ' ★' %></div></div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-white fw-semibold">Lotes cosechados en el rango</div>
+  <% if (!lotes.length) { %>
+    <div class="vacio"><i class="bi bi-inbox"></i><p class="mb-0">No hay cosechas en este rango de fechas.</p></div>
+  <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead><tr><th>Lote</th><th>Cultivo</th><th>Cosecha</th><th>Kg</th><th>Calidad</th><th>Labores</th><th>Calificación</th></tr></thead>
+        <tbody>
+          <% lotes.forEach(function (l) { %>
+            <tr><td class="fw-semibold"><%= l.codigo %></td><td><%= l.cultivo %></td><td><%= h.fecha(l.fecha) %></td><td><%= h.numero(l.kg) %></td><td><%= l.calidad %></td><td><%= l.labores %></td><td><%= l.promedio === null ? '—' : l.promedio.toFixed(1) + ' ★' %></td></tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>

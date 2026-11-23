@@ -1,0 +1,45 @@
+<div class="login-tarjeta card shadow-sm border-0">
+  <div class="card-body p-4 p-sm-5">
+    <div class="text-center mb-4">
+      <span class="marca-icono marca-icono-lg"><i class="bi bi-flower1"></i></span>
+      <h1 class="h4 mt-3 mb-1">Crear cuenta</h1>
+      <p class="text-muted mb-0">Únete a BitácoraAgro</p>
+    </div>
+    <% if (Object.keys(errores).length) { %>
+      <div class="alert alert-danger py-2 small d-flex gap-2" role="alert"><i class="bi bi-exclamation-triangle-fill"></i><span>Revisa los datos marcados en rojo.</span></div>
+    <% } %>
+    <form method="post" action="/registro" autocomplete="off">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="mb-3">
+        <label class="form-label" for="rol">¿Cómo usarás BitácoraAgro? <span class="text-danger">*</span></label>
+        <select class="form-select<%= errores.rol ? ' is-invalid' : '' %>" id="rol" name="rol" required>
+          <% roles.forEach(function (r) { %><option value="<%= r.valor %>" <%= valores.rol === r.valor ? 'selected' : '' %>><%= r.etiqueta %></option><% }) %>
+        </select>
+        <% if (errores.rol) { %><div class="invalid-feedback"><%= errores.rol %></div><% } %>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="nombre">Nombre completo <span class="text-danger">*</span></label>
+        <input class="form-control<%= errores.nombre ? ' is-invalid' : '' %>" id="nombre" name="nombre" value="<%= valores.nombre || '' %>" maxlength="80" required>
+        <% if (errores.nombre) { %><div class="invalid-feedback"><%= errores.nombre %></div><% } %>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="correo">Correo electrónico <span class="text-danger">*</span></label>
+        <input class="form-control<%= errores.correo ? ' is-invalid' : '' %>" type="email" id="correo" name="correo" value="<%= valores.correo || '' %>" maxlength="120" required>
+        <% if (errores.correo) { %><div class="invalid-feedback"><%= errores.correo %></div><% } %>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="password">Contraseña <span class="text-danger">*</span></label>
+        <input class="form-control<%= errores.password ? ' is-invalid' : '' %>" type="password" id="password" name="password" maxlength="72" autocomplete="new-password" required>
+        <% if (errores.password) { %><div class="invalid-feedback"><%= errores.password %></div>
+        <% } else { %><div class="form-text">Mínimo 8 caracteres con mayúsculas, minúsculas y números.</div><% } %>
+      </div>
+      <div class="mb-4">
+        <label class="form-label" for="password2">Repite la contraseña <span class="text-danger">*</span></label>
+        <input class="form-control<%= errores.password2 ? ' is-invalid' : '' %>" type="password" id="password2" name="password2" maxlength="72" autocomplete="new-password" required>
+        <% if (errores.password2) { %><div class="invalid-feedback"><%= errores.password2 %></div><% } %>
+      </div>
+      <button class="btn btn-primary w-100 py-2" type="submit">Crear cuenta</button>
+    </form>
+    <p class="text-center small mt-3 mb-0">¿Ya tienes cuenta? <a href="/login">Inicia sesión</a> · <a href="/">Volver al inicio</a></p>
+  </div>
+</div>

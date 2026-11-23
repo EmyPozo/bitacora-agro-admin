@@ -1,0 +1,64 @@
+<div class="encabezado">
+  <div>
+    <h1 class="h3 mb-1">Hola, <%= user.nombre.split(' ')[0] %> 👋</h1>
+    <p class="text-muted mb-0">Resumen de tu producción y de tu reputación como productor.</p>
+  </div>
+  <a class="btn btn-primary" href="/productor/lotes/nuevo"><i class="bi bi-plus-lg me-1"></i> Nuevo lote</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3"><a href="/productor/parcelas" class="card stat-card text-decoration-none h-100"><div class="card-body">
+    <i class="bi bi-map stat-icono"></i><div class="stat-numero"><%= resumen.parcelas %></div><div class="stat-titulo">Parcelas</div></div></a></div>
+  <div class="col-6 col-lg-3"><a href="/productor/lotes?estado=ACTIVO" class="card stat-card text-decoration-none h-100"><div class="card-body">
+    <i class="bi bi-flower2 stat-icono"></i><div class="stat-numero"><%= resumen.activos %></div><div class="stat-titulo">Lotes activos</div></div></a></div>
+  <div class="col-6 col-lg-3"><a href="/productor/lotes?estado=COSECHADO" class="card stat-card text-decoration-none h-100"><div class="card-body">
+    <i class="bi bi-basket stat-icono"></i><div class="stat-numero"><%= resumen.cosechados %></div><div class="stat-titulo">Lotes cosechados · <%= h.numero(resumen.kg) %> kg</div></div></a></div>
+  <div class="col-6 col-lg-3"><a href="/productor/calificaciones" class="card stat-card text-decoration-none h-100"><div class="card-body">
+    <i class="bi bi-star stat-icono"></i>
+    <div class="stat-numero"><%= reputacion.promedio === null ? '—' : reputacion.promedio.toFixed(1) %></div>
+    <div class="stat-titulo">Reputación<%= reputacion.promedio === null ? ': No disponible' : ' · ' + reputacion.total + ' calif.' %></div></div></a></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header bg-white fw-semibold">Lotes activos y estado para cosecha</div>
+      <% if (!activos.length) { %>
+        <div class="vacio"><i class="bi bi-flower2"></i><p class="mb-2">No tienes lotes activos.</p><a class="btn btn-sm btn-primary" href="/productor/lotes/nuevo">Crear un lote</a></div>
+      <% } else { %>
+        <ul class="list-group list-group-flush">
+          <% activos.forEach(function (l) { %>
+            <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+              <div>
+                <a class="fw-semibold text-decoration-none" href="/productor/lotes/<%= l.id %>"><%= l.codigo %> · <%= l.cultivo %></a>
+                <div class="small text-muted"><%= l.parcela %> · sembrado el <%= h.fecha(l.fecha_siembra) %></div>
+              </div>
+              <% if (l.estado.listo) { %>
+                <span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>Listo para cosechar</span>
+              <% } else { %>
+                <span class="badge text-bg-warning"><i class="bi bi-hourglass-split me-1"></i>Faltan <%= h.diasTxt(l.estado.faltan) %></span>
+              <% } %>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-header bg-white fw-semibold">Últimas calificaciones</div>
+      <% if (!ultimas.length) { %>
+        <div class="vacio"><i class="bi bi-star"></i><p class="mb-0">Aún no tienes calificaciones.<br>Aparecerán cuando un comprador califique tus lotes.</p></div>
+      <% } else { %>
+        <ul class="list-group list-group-flush">
+          <% ultimas.forEach(function (c) { %>
+            <li class="list-group-item">
+              <div class="d-flex justify-content-between"><span><%- h.estrellas(c.puntaje) %></span><span class="small text-muted"><%= c.codigo %> · <%= c.cultivo %></span></div>
+              <% if (c.comentario) { %><div class="small mt-1">«<%= c.comentario %>»</div><% } %>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </div>
+  </div>
+</div>

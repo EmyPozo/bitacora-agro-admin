@@ -3,10 +3,10 @@
 // Es seguro ejecutarlo varias veces: solo siembra si la base está vacía.
 // Las fechas son relativas a HOY para que siempre cumplan las reglas del core
 // (ninguna labor en el futuro, ninguna anterior a la siembra).
-const crypto = require('node:crypto');
 const bcrypt = require('bcryptjs');
 const { abrirBaseDeDatos } = require('./index');
 const { hoyISO, sumarDias } = require('../lib/validators');
+const { generarCertificado } = require('../core/reglas');
 
 // [nombre, ciclo en días]
 const CULTIVOS = [['Papa', 150], ['Maíz', 180], ['Tomate riñón', 120], ['Cebolla', 110], ['Fréjol', 110], ['Fresa', 90]];
@@ -54,7 +54,6 @@ function sembrar(db) {
     const insLote = db.prepare('INSERT INTO lotes (codigo, fecha_siembra, estado, parcela_id, cultivo_id) VALUES (?, ?, ?, ?, ?)');
     const insLabor = db.prepare('INSERT INTO labores (tipo, fecha, descripcion, cantidad, lote_id, insumo_id) VALUES (?, ?, ?, ?, ?, ?)');
     const insCosecha = db.prepare('INSERT INTO cosechas (fecha, cantidad_kg, calidad, lote_id) VALUES (?, ?, ?, ?)');
-    const insCert = db.prepare('INSERT INTO certificados (codigo_publico, hash, fecha_emision, lote_id) VALUES (?, ?, ?, ?)');
     const insCalif = db.prepare('INSERT INTO calificaciones (puntaje, comentario, lote_id, comprador_id) VALUES (?, ?, ?, ?)');
 
     // Lote ACTIVO con labores: sirve para demostrar que no se puede borrar lo que está en uso
@@ -63,13 +62,18 @@ function sembrar(db) {
     insLabor.run('RIEGO', hace(25), 'Riego por surcos', 3, l1, null);
     insLabor.run('FUMIGACION', hace(10), 'Control de tizón', 2, l1, insumo['Mancozeb']);
 
+    // Lote ACTIVO con un agroquímico aplicado hace 2 días (Glifosato, 21 días de carencia):
+    // sirve para demostrar que el sistema BLOQUEA la cosecha y avisa cuántos días faltan
+    const l5 = insLote.run('L-0005', hace(50), 'ACTIVO', esperanza, cultivo['Fréjol']).lastInsertRowid;
+    insLabor.run('ABONADO', hace(30), 'Abonado de fondo', 20, l5, insumo['Urea']);
+    insLabor.run('FUMIGACION', hace(2), 'Control de malezas', 1.5, l5, insumo['Glifosato']);
+
     // Lotes COSECHADOS con certificado y calificaciones: alimentan las estadísticas
     function lotecosechado(codigo, siembra, parcela, cultivoId, labores, cosecha, calificaciones) {
       const id = insLote.run(codigo, hace(siembra), 'COSECHADO', parcela, cultivoId).lastInsertRowid;
       for (const [tipo, dias, desc, cant, ins] of labores) insLabor.run(tipo, hace(dias), desc, cant, id, ins);
       insCosecha.run(hace(cosecha[0]), cosecha[1], cosecha[2], id);
-      const hashCert = crypto.createHash('sha256').update(`${codigo}|${hace(siembra)}|${hace(cosecha[0])}|${cosecha[1]}`).digest('hex');
-      insCert.run(`BA-${hashCert.slice(0, 8).toUpperCase()}`, hashCert, hace(cosecha[0] - 1), id);
+      generarCertificado(db, id, hace(cosecha[0] - 1)); // hash SHA-256 real del historial
       for (const [puntaje, comentario, comprador] of calificaciones) insCalif.run(puntaje, comentario, id, comprador);
     }
     lotecosechado('L-0002', 200, esperanza, cultivo['Maíz'],

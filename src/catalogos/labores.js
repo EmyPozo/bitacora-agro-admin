@@ -8,6 +8,7 @@
 //   - la fecha no puede ser anterior a la siembra,
 //   - la fecha no puede ser posterior a hoy.
 const { hoyISO } = require('../lib/validators');
+const { validarLabor } = require('../core/reglas');
 
 const TIPOS = [
   { valor: 'RIEGO', etiqueta: 'Riego' },
@@ -67,23 +68,9 @@ module.exports = (db) => ({
     WHERE l.codigo LIKE @q OR cu.nombre LIKE @q OR la.tipo LIKE @q OR i.nombre LIKE @q OR la.descripcion LIKE @q
     ORDER BY la.fecha DESC, la.id DESC`,
 
+  // Las reglas del core (lote activo, fecha entre siembra y hoy, insumo) viven en src/core/reglas.js
   validar(d, { db: bd }) {
-    const errores = {};
-    const lote = /^\d+$/.test(d.lote_id) ? bd.prepare('SELECT * FROM lotes WHERE id = ?').get(Number(d.lote_id)) : null;
-
-    if (lote) {
-      if (lote.estado !== 'ACTIVO') {
-        errores.lote_id = 'El lote ya fue cosechado: sus labores están bloqueadas.';
-      }
-      if (/^\d{4}-\d{2}-\d{2}$/.test(d.fecha)) {
-        if (d.fecha < lote.fecha_siembra) errores.fecha = `La fecha no puede ser anterior a la siembra (${lote.fecha_siembra}).`;
-        else if (d.fecha > hoyISO()) errores.fecha = 'La fecha no puede ser posterior a hoy.';
-      }
-    }
-    if ((d.tipo === 'ABONADO' || d.tipo === 'FUMIGACION') && d.insumo_id === '') {
-      errores.insumo_id = 'Este tipo de labor necesita un insumo.';
-    }
-    return errores;
+    return validarLabor(bd, d);
   },
 
   // Las labores de un lote cosechado no se pueden eliminar

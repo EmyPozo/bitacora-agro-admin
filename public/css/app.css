@@ -8,7 +8,8 @@
   --bs-primary-rgb: 46, 125, 79;
   --bs-link-color: var(--verde);
   --bs-link-hover-color: var(--verde-oscuro);
-  --bs-body-bg: var(--fondo);
+  --bs-link-color-rgb: 46, 125, 79;
+  --bs-link-hover-color-rgb: 31, 91, 56;
   --bs-border-radius: .6rem;
 }
 body { background: var(--fondo); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
@@ -80,3 +81,76 @@ body { background: var(--fondo); font-family: system-ui, -apple-system, "Segoe U
 /* ---------- Barras de producción ---------- */
 .barra { height: 10px; background: var(--verde-claro); border-radius: 999px; overflow: hidden; margin-top: .3rem; }
 .barra span { display: block; height: 100%; background: var(--verde); border-radius: 999px; }
+
+/* ---------- Barra superior (productor, comprador y público) ---------- */
+.contenedor { width: 100%; max-width: 1140px; margin: 0 auto; padding-left: 1rem; padding-right: 1rem; }
+.app-nav { background: #fff; border-bottom: 1px solid #E3E8E5; }
+.app-nav .navbar-nav .nav-link { color: #4a5a52; font-weight: 500; padding: .9rem .9rem; border-bottom: 3px solid transparent; }
+.app-nav .navbar-nav .nav-link:hover { color: var(--verde); }
+.app-nav .navbar-nav .nav-link.active { color: var(--verde-oscuro); border-bottom-color: var(--verde); }
+@media (max-width: 767.98px) { .app-nav .navbar-nav .nav-link { padding: .6rem 0; border-bottom: 0; } }
+.marca-simple { display: inline-flex; align-items: center; gap: .6rem; color: var(--verde-oscuro); text-decoration: none; font-size: 1.1rem; }
+.marca-simple .marca-icono { width: 34px; height: 34px; font-size: 1.05rem; border-radius: 10px; }
+.avatar-sm { width: 32px; height: 32px; background: var(--verde); font-size: .9rem; }
+.app-contenido { padding-top: 1.75rem; padding-bottom: 3rem; }
+.publico { min-height: 60vh; }
+.publico-pie { border-top: 1px solid #E3E8E5; background: #fff; }
+
+/* ---------- Inicio público ---------- */
+.hero { background: linear-gradient(135deg, #2E7D4F 0%, #1F5B38 100%); color: #fff; padding: 3rem 0 4.5rem; }
+.hero h1 { font-weight: 700; letter-spacing: -.02em; }
+.hero p.lead { color: rgba(255,255,255,.85); max-width: 640px; }
+.buscar-codigo { max-width: 520px; }
+.buscar-codigo .form-control { text-transform: uppercase; letter-spacing: .08em; }
+.pasos { margin-top: -2.5rem; }
+.paso { height: 100%; }
+.paso .stat-icono { margin-bottom: .6rem; }
+
+/* ---------- Línea de tiempo ---------- */
+.timeline { list-style: none; margin: 0; padding: 0 0 0 .25rem; }
+.timeline li { position: relative; padding: 0 0 1.25rem 2rem; }
+.timeline li::before { content: ''; position: absolute; left: .55rem; top: 1.25rem; bottom: -.15rem; width: 2px; background: #D3DED7; }
+.timeline li:last-child::before { display: none; }
+.timeline .punto { position: absolute; left: 0; top: .15rem; width: 1.15rem; height: 1.15rem; border-radius: 50%; border: 3px solid var(--verde); background: #fff; }
+.timeline .punto.agro { border-color: #E0A100; }
+.timeline .punto.hito { background: var(--verde); }
+.timeline .titulo { font-weight: 600; }
+.timeline .detalle { color: #5b6b62; font-size: .9rem; }
+.chip-agro { white-space: nowrap; background: #FFF1CC; color: #7A5600; font-weight: 600; font-size: .72rem; padding: .15rem .55rem; border-radius: 999px; margin-left: .4rem; }
+
+/* ---------- Tarjetas de datos ---------- */
+.dato { background: #F7F9F8; border: 1px solid #E3E8E5; border-radius: .75rem; padding: .85rem 1rem; height: 100%; }
+.dato small { color: #6b7a72; display: block; }
+.dato strong { font-size: 1.15rem; }
+.estado-cosecha .fecha-grande { font-size: 1.8rem; font-weight: 700; line-height: 1.1; }
+
+/* ---------- Página pública del certificado ---------- */
+.traza-hero { background: var(--verde); color: #fff; padding: 2rem 0 4rem; }
+.traza-hero .etiqueta { color: rgba(255,255,255,.75); font-size: .9rem; }
+.traza-hero h1 { font-weight: 700; letter-spacing: -.02em; }
+.sello { margin-top: -2.5rem; }
+.sello-icono { width: 56px; height: 56px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 1.7rem; color: #fff; flex: none; }
+.sello-ok .sello-icono { background: var(--verde); }
+.sello-mal { border-color: #E4A5A5 !important; background: #FDF2F2; }
+.sello-mal .sello-icono { background: #C0392B; }
+.codigo-pill { background: var(--verde-claro); color: var(--verde-oscuro); font-weight: 600; padding: .3rem .8rem; border-radius: 999px; font-size: .9rem; }
+
+/* ---------- Estrellas ---------- */
+.estrellas { color: #E8A317; letter-spacing: .1em; white-space: nowrap; }
+.estrellas .vacia { color: #D5DBD7; }
+.selector-estrellas { display: inline-flex; flex-direction: row-reverse; gap: .15rem; }
+.selector-estrellas input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.selector-estrellas label { font-size: 2rem; line-height: 1; color: #D5DBD7; cursor: pointer; transition: color .1s; }
+.selector-estrellas label:hover, .selector-estrellas label:hover ~ label,
+.selector-estrellas input:checked ~ label { color: #E8A317; }
+.selector-estrellas input:focus-visible + label { outline: 2px solid var(--verde); outline-offset: 2px; border-radius: 4px; }
+
+/* ---------- Certificado imprimible ---------- */
+.qr-caja svg { width: 100%; height: auto; max-width: 260px; }
+@media print {
+  .app-nav, .no-imprimir, .topbar, .sidebar, .publico-nav, .publico-pie { display: none !important; }
+  body { background: #fff; }
+  .card { box-shadow: none; border: 1px solid #999; }
+}
+
+.publico-nav .btn { white-space: nowrap; }

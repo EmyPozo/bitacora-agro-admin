@@ -1,0 +1,202 @@
+<%
+  const activo = lote.estado === 'ACTIVO';
+  const tabs = [['detalle', 'Detalle', 'bi-info-circle'], ['labores', 'Labores (' + labores.length + ')', 'bi-journal-check'], ['certificado', 'Certificado', 'bi-patch-check']];
+%>
+<nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="/productor/lotes">Lotes</a></li><li class="breadcrumb-item active"><%= lote.codigo %></li></ol></nav>
+
+<div class="encabezado">
+  <div>
+    <h1 class="h3 mb-1"><%= lote.cultivo %> <span class="text-muted fw-normal">· <%= lote.codigo %></span></h1>
+    <div class="text-muted">
+      <span class="badge text-bg-<%= activo ? 'success' : 'secondary' %> me-1"><%= activo ? 'Activo' : 'Cosechado' %></span>
+      <%= lote.parcela %> · sembrado el <%= h.fecha(lote.fecha_siembra) %>
+    </div>
+  </div>
+  <% if (puedeEliminar) { %>
+    <form method="post" action="/productor/lotes/<%= lote.id %>/eliminar" data-confirmar="¿Eliminar el lote <%= lote.codigo %>?">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <button class="btn btn-outline-danger btn-sm" type="submit"><i class="bi bi-trash me-1"></i> Eliminar lote</button>
+    </form>
+  <% } %>
+</div>
+
+<ul class="nav nav-tabs mb-4">
+  <% tabs.forEach(function (t) { %>
+    <li class="nav-item"><a class="nav-link <%= tab === t[0] ? 'active' : '' %>" href="/productor/lotes/<%= lote.id %>?tab=<%= t[0] %>"><i class="bi <%= t[2] %> me-1"></i><%= t[1] %></a></li>
+  <% }) %>
+</ul>
+
+<% if (tab === 'detalle') { %>
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card mb-3"><div class="card-body">
+      <h2 class="h6 text-uppercase text-muted mb-3">Datos del lote</h2>
+      <div class="row g-2">
+        <div class="col-6"><div class="dato"><small>Cultivo</small><strong><%= lote.cultivo %></strong></div></div>
+        <div class="col-6"><div class="dato"><small>Ciclo aproximado</small><strong><%= h.diasTxt(lote.ciclo_dias) %></strong></div></div>
+        <div class="col-6"><div class="dato"><small>Parcela</small><strong><%= lote.parcela %></strong></div></div>
+        <div class="col-6"><div class="dato"><small>Superficie</small><strong><%= h.numero(lote.hectareas) %> ha</strong></div></div>
+      </div>
+    </div></div>
+    <div class="card"><div class="card-body">
+      <h2 class="h6 text-uppercase text-muted mb-3">Resumen</h2>
+      <div class="row g-2">
+        <div class="col-4"><div class="dato"><small>Labores</small><strong><%= labores.length %></strong></div></div>
+        <div class="col-4"><div class="dato"><small>Agroquímicos</small><strong><%= agroquimicos %></strong></div></div>
+        <div class="col-4"><div class="dato"><small>Certificado</small><strong><%= cert ? 'Sí' : 'No' %></strong></div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="col-lg-6">
+    <% if (activo) { %>
+      <div class="card estado-cosecha mb-3 border-<%= estado.listo ? 'success' : 'warning' %>"><div class="card-body">
+        <h2 class="h6 text-uppercase text-muted mb-2">Estado para cosecha</h2>
+        <% if (estado.listo) { %>
+          <div class="fecha-grande text-success"><i class="bi bi-check-circle-fill me-1"></i>Listo para cosechar</div>
+          <p class="text-muted mb-0 mt-1">El lote está libre desde el <%= h.fecha(estado.fecha) %>.</p>
+        <% } else { %>
+          <div class="fecha-grande text-warning-emphasis"><i class="bi bi-hourglass-split me-1"></i>Faltan <%= h.diasTxt(estado.faltan) %></div>
+          <p class="mb-0 mt-1">Fecha de liberación: <strong><%= h.fecha(estado.fecha) %></strong>.
+            <% if (estado.causa) { %><br><span class="text-muted">Por <%= estado.causa.insumo %> aplicado el <%= h.fecha(estado.causa.fecha_labor) %> (<%= h.diasTxt(estado.causa.dias_carencia) %> de carencia).</span><% } %>
+          </p>
+        <% } %>
+      </div></div>
+
+      <div class="card"><div class="card-body">
+        <h2 class="h5 mb-3">Registrar cosecha</h2>
+        <% if (ec._general) { %><div class="alert alert-danger"><%= ec._general %></div><% } %>
+        <p class="small text-muted">Al registrar la cosecha el lote se cierra y sus labores quedan bloqueadas.</p>
+        <form method="post" action="/productor/lotes/<%= lote.id %>/cosecha" novalidate>
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <div class="mb-3">
+            <label class="form-label" for="c_fecha">Fecha de cosecha</label>
+            <input type="date" class="form-control<%= ec.fecha ? ' is-invalid' : '' %>" id="c_fecha" name="fecha" value="<%= vc.fecha || hoy %>" max="<%= hoy %>" required>
+            <% if (ec.fecha) { %><div class="invalid-feedback"><%= ec.fecha %></div><% } %>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label" for="c_kg">Cantidad (kg)</label>
+              <input class="form-control<%= ec.cantidad_kg ? ' is-invalid' : '' %>" id="c_kg" name="cantidad_kg" value="<%= vc.cantidad_kg || '' %>" inputmode="decimal" placeholder="Ej: 850" required>
+              <% if (ec.cantidad_kg) { %><div class="invalid-feedback"><%= ec.cantidad_kg %></div><% } %>
+            </div>
+            <div class="col-6">
+              <label class="form-label" for="c_cal">Calidad</label>
+              <select class="form-select<%= ec.calidad ? ' is-invalid' : '' %>" id="c_cal" name="calidad" required>
+                <% calidades.forEach(function (q) { %><option value="<%= q %>" <%= vc.calidad === q ? 'selected' : '' %>><%= q %></option><% }) %>
+              </select>
+              <% if (ec.calidad) { %><div class="invalid-feedback"><%= ec.calidad %></div><% } %>
+            </div>
+          </div>
+          <button class="btn btn-primary w-100" type="submit"><i class="bi bi-basket me-1"></i> Registrar cosecha</button>
+        </form>
+      </div></div>
+    <% } else { %>
+      <div class="card"><div class="card-body">
+        <h2 class="h6 text-uppercase text-muted mb-3">Cosecha</h2>
+        <div class="row g-2">
+          <div class="col-4"><div class="dato"><small>Fecha</small><strong><%= h.fecha(cosecha.fecha) %></strong></div></div>
+          <div class="col-4"><div class="dato"><small>Cantidad</small><strong><%= h.numero(cosecha.cantidad_kg) %> kg</strong></div></div>
+          <div class="col-4"><div class="dato"><small>Calidad</small><strong><%= cosecha.calidad %></strong></div></div>
+        </div>
+        <a class="btn btn-outline-success mt-3" href="/productor/lotes/<%= lote.id %>?tab=certificado"><i class="bi bi-patch-check me-1"></i> Ver certificado</a>
+      </div></div>
+    <% } %>
+  </div>
+</div>
+
+<% } else if (tab === 'labores') { %>
+<div class="row g-3">
+  <% if (activo) { %>
+  <div class="col-lg-5 order-lg-2">
+    <div class="card"><div class="card-body">
+      <h2 class="h5 mb-3">Agregar labor</h2>
+      <% if (e._general) { %><div class="alert alert-danger"><%= e._general %></div><% } %>
+      <form method="post" action="/productor/lotes/<%= lote.id %>/labores" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <%- include('_labor-campos') %>
+        <button class="btn btn-primary w-100 mt-3" type="submit"><i class="bi bi-plus-lg me-1"></i> Registrar labor</button>
+      </form>
+    </div></div>
+  </div>
+  <% } %>
+  <div class="col-lg-<%= activo ? 7 : 12 %> order-lg-1">
+    <div class="card"><div class="card-body">
+      <h2 class="h5 mb-3">Historial de labores</h2>
+      <% if (!activo) { %><div class="alert alert-secondary"><i class="bi bi-lock me-1"></i>Lote cosechado: las labores están bloqueadas (no se pueden editar ni borrar).</div><% } %>
+      <% if (!labores.length) { %>
+        <div class="vacio py-4"><i class="bi bi-journal"></i><p class="mb-0">Aún no hay labores. Registra la primera.</p></div>
+      <% } else { %>
+        <ol class="timeline">
+          <li><span class="punto hito"></span><div class="titulo">Siembra</div><div class="detalle"><%= h.fecha(lote.fecha_siembra) %></div></li>
+          <% labores.forEach(function (la) { %>
+            <li>
+              <span class="punto <%= la.es_agroquimico ? 'agro' : '' %>"></span>
+              <div class="d-flex justify-content-between gap-2">
+                <div>
+                  <div class="titulo"><i class="bi <%= h.iconoLabor(la.tipo) %> me-1"></i><%= h.tipoLabor(la.tipo) %>
+                    <% if (la.es_agroquimico) { %><span class="chip-agro">Carencia <%= h.diasTxt(la.dias_carencia) %></span><% } %></div>
+                  <div class="detalle"><%= h.fecha(la.fecha) %><% if (la.insumo) { %> · <%= la.insumo %><% } %><% if (la.cantidad !== null) { %> · <%= h.numero(la.cantidad) %><% } %><% if (la.descripcion) { %><br><%= la.descripcion %><% } %></div>
+                </div>
+                <% if (activo) { %>
+                  <div class="text-nowrap">
+                    <a class="btn btn-sm btn-outline-secondary" href="/productor/lotes/<%= lote.id %>/labores/<%= la.id %>/editar" aria-label="Editar labor"><i class="bi bi-pencil"></i></a>
+                    <form class="d-inline" method="post" action="/productor/lotes/<%= lote.id %>/labores/<%= la.id %>/eliminar" data-confirmar="¿Eliminar esta labor?">
+                      <input type="hidden" name="_csrf" value="<%= csrf %>">
+                      <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Eliminar labor"><i class="bi bi-trash"></i></button>
+                    </form>
+                  </div>
+                <% } %>
+              </div>
+            </li>
+          <% }) %>
+        </ol>
+      <% } %>
+    </div></div>
+  </div>
+</div>
+
+<% } else { %>
+  <% if (activo) { %>
+    <div class="card"><div class="vacio"><i class="bi bi-lock"></i>
+      <p class="mb-1 fw-semibold">El certificado se genera después de la cosecha.</p>
+      <p class="mb-3">Registra la cosecha del lote para cerrarlo y emitir su certificado.</p>
+      <a class="btn btn-primary" href="/productor/lotes/<%= lote.id %>">Ir a registrar cosecha</a></div></div>
+  <% } else if (!cert) { %>
+    <div class="card"><div class="vacio"><i class="bi bi-patch-check"></i>
+      <p class="mb-1 fw-semibold">Lote cosechado: falta emitir el certificado.</p>
+      <p class="mb-3">Se calculará un código SHA-256 con todo el historial y se creará un código público con QR.</p>
+      <form method="post" action="/productor/lotes/<%= lote.id %>/certificado">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="btn btn-primary" type="submit"><i class="bi bi-patch-check me-1"></i> Generar certificado</button>
+      </form></div></div>
+  <% } else { %>
+    <div class="row g-3">
+      <div class="col-md-7">
+        <div class="card h-100"><div class="card-body">
+          <h2 class="h5 mb-3">Certificado emitido</h2>
+          <div class="mb-3"><span class="codigo-pill fs-6"><%= cert.codigo_publico %></span></div>
+          <p class="mb-1"><strong>Emisión:</strong> <%= h.fecha(cert.fecha_emision) %></p>
+          <% if (verificado) { %>
+            <p class="mb-2 text-success"><i class="bi bi-patch-check-fill me-1"></i> Integridad verificada: el historial no cambió.</p>
+          <% } else { %>
+            <p class="mb-2 text-danger"><i class="bi bi-exclamation-octagon-fill me-1"></i> ¡Alerta! El historial ya no coincide con el certificado.</p>
+          <% } %>
+          <details class="small text-muted mb-3"><summary>Huella SHA-256</summary><code class="text-break"><%= cert.hash %></code></details>
+          <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-primary" href="/productor/lotes/<%= lote.id %>/certificado"><i class="bi bi-printer me-1"></i> Ver e imprimir</a>
+            <a class="btn btn-outline-success" href="/t/<%= cert.codigo_publico %>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-1"></i> Abrir página pública</a>
+          </div>
+          <div class="form-text mt-2">Enlace público: <span class="text-break"><%= urlPublica %></span></div>
+        </div></div>
+      </div>
+      <div class="col-md-5">
+        <div class="card h-100"><div class="card-body text-center qr-caja">
+          <h2 class="h6 text-uppercase text-muted">Código QR</h2>
+          <%- qr %>
+          <div class="small text-muted">Pégalo en el empaque del producto</div>
+        </div></div>
+      </div>
+    </div>
+  <% } %>
+<% } %>

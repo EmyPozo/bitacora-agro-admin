@@ -1,0 +1,35 @@
+<%# Campos del formulario de labor (se usan al agregar y al editar). Variables: v, e, insumos, tiposLabor, hoy %>
+<div class="row g-3">
+  <div class="col-sm-6">
+    <label class="form-label" for="tipo">Tipo de labor</label>
+    <select class="form-select<%= e.tipo ? ' is-invalid' : '' %>" id="tipo" name="tipo" required>
+      <% tiposLabor.forEach(function (t) { %><option value="<%= t %>" <%= v.tipo === t ? 'selected' : '' %>><%= h.tipoLabor(t) %></option><% }) %>
+    </select>
+    <% if (e.tipo) { %><div class="invalid-feedback"><%= e.tipo %></div><% } %>
+  </div>
+  <div class="col-sm-6">
+    <label class="form-label" for="fecha">Fecha</label>
+    <input type="date" class="form-control<%= e.fecha ? ' is-invalid' : '' %>" id="fecha" name="fecha" value="<%= v.fecha || '' %>" max="<%= hoy %>" required>
+    <% if (e.fecha) { %><div class="invalid-feedback"><%= e.fecha %></div><% } %>
+  </div>
+  <div class="col-sm-6">
+    <label class="form-label" for="insumo_id">Insumo <span class="text-muted">(obligatorio en abonado y fumigación)</span></label>
+    <select class="form-select<%= e.insumo_id ? ' is-invalid' : '' %>" id="insumo_id" name="insumo_id">
+      <option value="">Ninguno</option>
+      <% insumos.forEach(function (i) { %>
+        <option value="<%= i.id %>" <%= String(v.insumo_id) === String(i.id) ? 'selected' : '' %>><%= i.nombre %><%= i.es_agroquimico ? ' · carencia ' + h.diasTxt(i.dias_carencia) : '' %></option>
+      <% }) %>
+    </select>
+    <% if (e.insumo_id) { %><div class="invalid-feedback"><%= e.insumo_id %></div><% } %>
+  </div>
+  <div class="col-sm-6">
+    <label class="form-label" for="cantidad">Cantidad <span class="text-muted">(opcional)</span></label>
+    <input class="form-control<%= e.cantidad ? ' is-invalid' : '' %>" id="cantidad" name="cantidad" value="<%= v.cantidad === null || v.cantidad === undefined ? '' : v.cantidad %>" inputmode="decimal" placeholder="Ej: 25">
+    <% if (e.cantidad) { %><div class="invalid-feedback"><%= e.cantidad %></div><% } %>
+  </div>
+  <div class="col-12">
+    <label class="form-label" for="descripcion">Descripción <span class="text-muted">(opcional)</span></label>
+    <input class="form-control<%= e.descripcion ? ' is-invalid' : '' %>" id="descripcion" name="descripcion" value="<%= v.descripcion || '' %>" maxlength="200">
+    <% if (e.descripcion) { %><div class="invalid-feedback"><%= e.descripcion %></div><% } %>
+  </div>
+</div>

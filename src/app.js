@@ -1,9 +1,9 @@
 'use strict';
 // =====================================================================
-// BitácoraAgro - Administración (MVC)
-//   M = src/db (SQLite) + src/catalogos (reglas de cada módulo)
+// BitácoraAgro (MVC)
+//   M = src/db (SQLite) + src/core (reglas) + src/catalogos (administración)
 //   V = src/views (plantillas EJS + Bootstrap)
-//   C = src/controllers (login, panel, CRUD)
+//   C = src/controllers (auth, admin, productor, comprador, público)
 // =====================================================================
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -11,18 +11,15 @@ const Fastify = require('fastify');
 
 const { abrirBaseDeDatos } = require('./db');
 const crearCatalogos = require('./catalogos');
+const { menuAdmin, menuProductor, menuComprador, HOME } = require('./menus');
 const { registrarCrud } = require('./controllers/crud');
 const { registrarAuth } = require('./controllers/auth');
 const { registrarDashboard } = require('./controllers/dashboard');
 const { registrarEstadisticas } = require('./controllers/estadisticas');
-
-const GRUPOS_MENU = [
-  { titulo: 'Personas', slugs: ['usuarios'] },
-  { titulo: 'Catálogos', slugs: ['cultivos', 'insumos'] },
-  { titulo: 'Producción (alimenta al core)', slugs: ['parcelas', 'lotes', 'labores'] },
-  { titulo: 'Reportes', slugs: ['estadisticas'] },
-];
-const EXTRAS_MENU = { estadisticas: { slug: 'estadisticas', titulo: 'Estadísticas', icono: 'bi-bar-chart-line' } };
+const { registrarProductor } = require('./controllers/productor');
+const { registrarComprador } = require('./controllers/comprador');
+const { registrarPublico } = require('./controllers/publico');
+const h = require('./lib/vistas');
 
 function buildApp({ dbPath, logger = false, sessionSecret } = {}) {
   const produccion = process.env.NODE_ENV === 'production';
@@ -42,22 +39,18 @@ function buildApp({ dbPath, logger = false, sessionSecret } = {}) {
   app.register(require('@fastify/session'), {
     secret,
     cookieName: 'bitacora.sid',
-    saveUninitialized: false, // no se crea sesión hasta que haga falta (evita cookies de más)
+    saveUninitialized: false, // no se crea sesión hasta que haga falta
     cookie: { httpOnly: true, sameSite: 'lax', secure: produccion ? 'auto' : false, maxAge: 8 * 60 * 60 * 1000 },
   });
 
   const catalogos = crearCatalogos(db);
-  const menu = GRUPOS_MENU.map((g) => ({
-    titulo: g.titulo,
-    items: g.slugs.map((s) => EXTRAS_MENU[s] || catalogos.find((c) => c.slug === s)).map((c) => ({ slug: c.slug, titulo: c.titulo, icono: c.icono })),
-  }));
+  const menus = { ADMINISTRADOR: menuAdmin(catalogos), PRODUCTOR: menuProductor, COMPRADOR: menuComprador };
 
   app.register(require('@fastify/view'), {
     engine: { ejs: require('ejs') },
     root: path.join(__dirname, 'views'),
     layout: 'layouts/main',
     includeViewExtension: true,
-    defaultContext: { menu },
   });
 
   // Archivos estáticos: nuestro CSS/JS y Bootstrap (instalado con npm, funciona sin internet)
@@ -74,11 +67,13 @@ function buildApp({ dbPath, logger = false, sessionSecret } = {}) {
   // reply.page(vista, datos, codigo): renderiza una vista con los datos comunes
   app.decorateReply('page', function page(vista, datos = {}, codigo = 200) {
     const s = this.request.session || {};
-    if (s.csrf === undefined && this.request.session) s.csrf = crypto.randomBytes(24).toString('hex');
+    const anonimoPublico = datos.publico && !s.user; // visitante anónimo en la página pública: no se crea sesión
+    if (s.csrf === undefined && this.request.session && !anonimoPublico) s.csrf = crypto.randomBytes(24).toString('hex');
     const flash = s.flash || null;
     if (flash) delete s.flash;
     return this.code(codigo).view(vista, {
-      titulo: '', user: s.user || null, flash, csrf: s.csrf,
+      titulo: '', user: s.user || null, flash, csrf: s.csrf, publico: false, h,
+      menu: s.user ? menus[s.user.rol] || [] : [],
       ruta: this.request.url.split('?')[0], ...datos,
     });
   });
@@ -100,7 +95,6 @@ function buildApp({ dbPath, logger = false, sessionSecret } = {}) {
 
   // ---------- Errores ----------
   app.setNotFoundHandler((req, reply) => {
-    // Pedidos de archivos (favicon, mapas, etc.): respuesta simple, sin tocar la sesión
     if (path.extname(req.url.split('?')[0])) return reply.code(404).type('text/plain').send('No encontrado');
     return reply.page('error', { titulo: 'No encontrado', codigo: 404, mensaje: 'La página que buscas no existe.' }, 404);
   });
@@ -113,39 +107,52 @@ function buildApp({ dbPath, logger = false, sessionSecret } = {}) {
     }, codigo);
   });
 
-  // ---------- Controladores ----------
-  registrarAuth(app);
-
-  // Todo lo que está bajo /admin exige sesión iniciada y rol ADMINISTRADOR
-  app.register(async (admin) => {
-    admin.addHook('preHandler', async (req, reply) => {
+  // ---------- Guardia por rol ----------
+  // Se consulta la BD en cada petición: si desactivan o cambian de rol al usuario, pierde acceso al instante.
+  function guardia(rolRequerido, prefijoApi) {
+    return async (req, reply) => {
       const sesion = req.session.user;
-      const esApi = req.url.startsWith('/admin/api/');
-
+      const esApi = prefijoApi && req.url.startsWith(prefijoApi);
       if (!sesion) {
         if (esApi) return reply.code(401).send({ error: 'No autenticado' });
         req.session.flash = { tipo: 'warning', msg: 'Inicia sesión para continuar.' };
         return reply.redirect('/login');
       }
-      // Se consulta la BD en cada petición: si desactivan o cambian de rol al usuario, pierde acceso al instante
       const u = db.prepare('SELECT id, nombre, correo, rol, activo FROM usuarios WHERE id = ?').get(sesion.id);
       if (!u || !u.activo) {
         await req.session.destroy();
         return esApi ? reply.code(401).send({ error: 'No autenticado' }) : reply.redirect('/login');
       }
-      if (u.rol !== 'ADMINISTRADOR') {
+      if (u.rol !== rolRequerido) {
         if (esApi) return reply.code(403).send({ error: 'Sin permiso' });
         return reply.page('error', {
           titulo: 'Acceso restringido', codigo: 403,
-          mensaje: 'Esta sección es solo para administradores.',
+          mensaje: 'Esta sección es solo para usuarios con otro rol.', volver: HOME[u.rol],
         }, 403);
       }
       req.session.user = { id: u.id, nombre: u.nombre, correo: u.correo, rol: u.rol };
-    });
+    };
+  }
 
+  // ---------- Controladores ----------
+  registrarAuth(app);
+  registrarPublico(app);
+
+  app.register(async (admin) => {
+    admin.addHook('preHandler', guardia('ADMINISTRADOR', '/admin/api/'));
     registrarDashboard(admin);
     registrarEstadisticas(admin);
     for (const cfg of catalogos) registrarCrud(admin, cfg);
+  });
+
+  app.register(async (productor) => {
+    productor.addHook('preHandler', guardia('PRODUCTOR', '/productor/api/'));
+    registrarProductor(productor);
+  });
+
+  app.register(async (comprador) => {
+    comprador.addHook('preHandler', guardia('COMPRADOR'));
+    registrarComprador(comprador);
   });
 
   return app;

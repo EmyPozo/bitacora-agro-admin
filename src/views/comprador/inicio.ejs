@@ -1,0 +1,39 @@
+<div class="encabezado">
+  <div>
+    <h1 class="h3 mb-1">Hola, <%= user.nombre.split(' ')[0] %> 👋</h1>
+    <p class="text-muted mb-0">Consulta el historial de un producto y califica al productor.</p>
+  </div>
+</div>
+
+<div class="card nota-card mb-4"><div class="card-body p-4">
+  <h2 class="h5 mb-3"><i class="bi bi-qr-code-scan me-2"></i>Consultar un certificado</h2>
+  <p class="text-muted">Escanea el QR del empaque con la cámara de tu celular o escribe el código aquí.</p>
+  <form class="buscar-codigo" method="get" action="/consultar">
+    <div class="input-group">
+      <input type="text" class="form-control" name="codigo" placeholder="BA-XXXX-XXXX" maxlength="20" autocomplete="off" aria-label="Código del certificado" required>
+      <button class="btn btn-primary" type="submit"><i class="bi bi-search me-1"></i> Consultar</button>
+    </div>
+  </form>
+</div></div>
+
+<div class="card">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <span class="fw-semibold">Mis últimas calificaciones</span>
+    <a class="small text-decoration-none" href="/comprador/calificaciones">Ver todas (<%= total %>)</a>
+  </div>
+  <% if (!ultimas.length) { %>
+    <div class="vacio"><i class="bi bi-star"></i><p class="mb-0">Aún no has calificado ningún lote.</p></div>
+  <% } else { %>
+    <ul class="list-group list-group-flush">
+      <% ultimas.forEach(function (c) { %>
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between flex-wrap gap-1">
+            <span><%- h.estrellas(c.puntaje) %> <a class="ms-1 text-decoration-none" href="/t/<%= c.certificado %>"><%= c.cultivo %> · <%= c.lote %></a></span>
+            <span class="small text-muted"><%= c.productor %> · <%= h.fecha(c.fecha) %></span>
+          </div>
+          <% if (c.comentario) { %><div class="small mt-1">«<%= c.comentario %>»</div><% } %>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</div>

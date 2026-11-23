@@ -1,0 +1,18 @@
+<nav aria-label="breadcrumb"><ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="/productor/lotes">Lotes</a></li>
+  <li class="breadcrumb-item"><a href="/productor/lotes/<%= lote.id %>?tab=labores"><%= lote.codigo %></a></li>
+  <li class="breadcrumb-item active">Editar labor</li></ol></nav>
+<div class="card form-card">
+  <div class="card-body p-4">
+    <h1 class="h4 mb-4">Editar labor · <%= lote.codigo %> (<%= lote.cultivo %>)</h1>
+    <% if (e._general) { %><div class="alert alert-danger"><%= e._general %></div><% } %>
+    <form method="post" action="/productor/lotes/<%= lote.id %>/labores/<%= labor.id %>" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <%- include('_labor-campos') %>
+      <div class="d-flex gap-2 mt-4">
+        <button class="btn btn-primary" type="submit"><i class="bi bi-check-lg me-1"></i> Guardar cambios</button>
+        <a class="btn btn-outline-secondary" href="/productor/lotes/<%= lote.id %>?tab=labores">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>

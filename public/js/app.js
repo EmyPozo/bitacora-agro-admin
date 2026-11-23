@@ -53,4 +53,12 @@
       document.getElementById('nombreEliminar').textContent = '«' + boton.dataset.nombre + '»';
     });
   }
+
+  // 3) Confirmación antes de borrar (formularios con data-confirmar) y botones de imprimir
+  document.querySelectorAll('form[data-confirmar]').forEach(function (f) {
+    f.addEventListener('submit', function (ev) { if (!window.confirm(f.dataset.confirmar)) ev.preventDefault(); });
+  });
+  document.querySelectorAll('[data-imprimir]').forEach(function (b) {
+    b.addEventListener('click', function () { window.print(); });
+  });
 })();

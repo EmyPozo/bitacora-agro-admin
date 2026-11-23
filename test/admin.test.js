@@ -234,7 +234,7 @@ test('el formulario de lote usa <select> (no inputs) para productor, parcela y c
   assert.match(r.body, /<select[^>]+name="parcela_id"[^>]+data-dep-url="\/admin\/api\/productores\/:id\/parcelas"/);
   assert.match(r.body, /<select[^>]+name="cultivo_id"/);
   assert.doesNotMatch(r.body, /<input[^>]+name="(productor_id|parcela_id|cultivo_id)"/);
-  assert.match(r.body, /value="L-0005"/); // código sugerido
+  assert.match(r.body, /value="L-0006"/); // código sugerido (ya hay 5 lotes de prueba)
 });
 
 function loteValido(app, extra = {}) {

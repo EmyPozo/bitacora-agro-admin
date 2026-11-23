@@ -1,0 +1,32 @@
+<div class="no-imprimir encabezado">
+  <nav aria-label="breadcrumb" class="mb-0"><ol class="breadcrumb mb-0"><li class="breadcrumb-item"><a href="/productor/lotes">Lotes</a></li><li class="breadcrumb-item"><a href="/productor/lotes/<%= lote.id %>?tab=certificado"><%= lote.codigo %></a></li><li class="breadcrumb-item active">Certificado</li></ol></nav>
+  <button class="btn btn-primary" type="button" data-imprimir><i class="bi bi-printer me-1"></i> Imprimir</button>
+</div>
+
+<div class="card mx-auto" style="max-width: 760px;">
+  <div class="card-body p-4 p-md-5">
+    <div class="text-center mb-4">
+      <span class="marca-icono marca-icono-lg mb-2"><i class="bi bi-flower1"></i></span>
+      <h1 class="h3 mb-0">Certificado de trazabilidad</h1>
+      <div class="text-muted">BitácoraAgro</div>
+    </div>
+    <div class="row g-3 align-items-center mb-4">
+      <div class="col-sm-8">
+        <div class="mb-2"><span class="codigo-pill fs-6"><%= cert.codigo_publico %></span></div>
+        <dl class="row mb-0">
+          <dt class="col-5">Cultivo</dt><dd class="col-7"><%= lote.cultivo %></dd>
+          <dt class="col-5">Lote</dt><dd class="col-7"><%= lote.codigo %></dd>
+          <dt class="col-5">Parcela</dt><dd class="col-7"><%= lote.parcela %> (<%= lote.ubicacion %>)</dd>
+          <dt class="col-5">Siembra</dt><dd class="col-7"><%= h.fecha(lote.fecha_siembra) %></dd>
+          <dt class="col-5">Cosecha</dt><dd class="col-7"><%= h.fecha(cosecha.fecha) %> · <%= h.numero(cosecha.cantidad_kg) %> kg · <%= cosecha.calidad %></dd>
+          <dt class="col-5">Emisión</dt><dd class="col-7"><%= h.fecha(cert.fecha_emision) %></dd>
+        </dl>
+      </div>
+      <div class="col-sm-4 text-center qr-caja"><%- qr %></div>
+    </div>
+    <p class="mb-1 small"><strong>Huella SHA-256</strong></p>
+    <code class="d-block small text-break mb-3"><%= cert.hash %></code>
+    <p class="small text-muted mb-0">Escanea el QR o entra a <strong><%= url %></strong> para ver el historial completo y verificar que no fue modificado.</p>
+    <% if (!verificado) { %><div class="alert alert-danger mt-3 mb-0">¡Alerta! El historial actual ya no coincide con este certificado.</div><% } %>
+  </div>
+</div>

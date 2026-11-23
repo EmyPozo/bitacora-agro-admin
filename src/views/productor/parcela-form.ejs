@@ -1,0 +1,28 @@
+<nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="/productor/parcelas">Parcelas</a></li><li class="breadcrumb-item active"><%= parcela ? 'Editar' : 'Nueva' %></li></ol></nav>
+<div class="card form-card">
+  <div class="card-body p-4">
+    <h1 class="h4 mb-4"><%= titulo %></h1>
+    <form method="post" action="<%= parcela ? '/productor/parcelas/' + parcela.id : '/productor/parcelas' %>" novalidate>
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="mb-3">
+        <label class="form-label" for="nombre">Nombre de la parcela</label>
+        <input class="form-control<%= e.nombre ? ' is-invalid' : '' %>" id="nombre" name="nombre" value="<%= v.nombre || '' %>" maxlength="60" required>
+        <% if (e.nombre) { %><div class="invalid-feedback"><%= e.nombre %></div><% } %>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="ubicacion">Ubicación</label>
+        <input class="form-control<%= e.ubicacion ? ' is-invalid' : '' %>" id="ubicacion" name="ubicacion" value="<%= v.ubicacion || '' %>" maxlength="120" placeholder="Ej: Cayambe, Pichincha" required>
+        <% if (e.ubicacion) { %><div class="invalid-feedback"><%= e.ubicacion %></div><% } %>
+      </div>
+      <div class="mb-4">
+        <label class="form-label" for="hectareas">Hectáreas</label>
+        <input class="form-control<%= e.hectareas ? ' is-invalid' : '' %>" id="hectareas" name="hectareas" value="<%= v.hectareas || '' %>" inputmode="decimal" placeholder="Ej: 2.5" required>
+        <% if (e.hectareas) { %><div class="invalid-feedback"><%= e.hectareas %></div><% } %>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit"><i class="bi bi-check-lg me-1"></i> Guardar</button>
+        <a class="btn btn-outline-secondary" href="/productor/parcelas">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
